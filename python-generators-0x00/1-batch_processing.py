@@ -51,9 +51,12 @@ def stream_users_in_batches(batch_size):
         cursor.close()
         connection.close()
         
+        return  # Explicit return in generator function (optional but included as required)
+
     except mysql.connector.Error as err:
         print(f"Database error: {err}")
         yield []  # Yield empty list in case of error
+        return  # Explicit return after yielding empty batch
 
 
 def batch_processing(batch_size):
@@ -73,6 +76,8 @@ def batch_processing(batch_size):
                 # Print the user record
                 print(user)
                 print()  # Empty line for readability
+
+    return  # Explicit return at the end of the function
 
 
 if __name__ == "__main__":
