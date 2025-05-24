@@ -2,6 +2,7 @@
 """Module for logging database queries using a decorator."""
 import sqlite3
 import functools
+from datetime import datetime
 
 
 def log_queries():
