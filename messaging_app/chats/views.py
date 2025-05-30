@@ -61,9 +61,9 @@ class ConversationViewSet(viewsets.ModelViewSet):
         Send a message to this conversation
         """
         conversation = self.get_object()
-        content = request.data.get('content')
+        message_body = request.data.get('message_body')
         
-        if not content:
+        if not message_body:
             return Response(
                 {'error': 'Message content is required'},
                 status=status.HTTP_400_BAD_REQUEST
@@ -72,7 +72,7 @@ class ConversationViewSet(viewsets.ModelViewSet):
         message = Message.objects.create(
             sender=request.user,
             conversation=conversation,
-            content=content
+            message_body=message_body
         )
         
         serializer = MessageSerializer(message)
