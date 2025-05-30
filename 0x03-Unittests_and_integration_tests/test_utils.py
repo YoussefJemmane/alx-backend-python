@@ -50,7 +50,8 @@ class TestGetJson(unittest.TestCase):
         # Call the function under test
         result = get_json(test_url)
 
-        # Assert that requests.get was called exactly once with the expected URL
+        # Assert that requests.get was called exactly once with the expected
+        # URL
         mock_get.assert_called_once_with(test_url)
 
         # Assert that the output of get_json is equal to test_payload
@@ -61,7 +62,8 @@ class TestMemoize(unittest.TestCase):
     """Tests for memoize decorator"""
 
     def test_memoize(self):
-        """Test that when calling a_property twice, the correct result is returned
+        """Test that when calling a_property twice, the correct result
+        is returned
         but a_method is only called once
         """
         class TestClass:
@@ -95,3 +97,4 @@ class TestMemoize(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+

@@ -9,10 +9,12 @@ from parameterized import parameterized, parameterized_class
 from client import GithubOrgClient
 from fixtures import TEST_PAYLOAD
 
+
 class TestGithubOrgClient(unittest.TestCase):
     """
     Tests for GithubOrgClient class
     """
+
     @parameterized.expand([
         ("google",),
         ("abc",),
@@ -77,6 +79,7 @@ class TestGithubOrgClient(unittest.TestCase):
             # Assert both mocks were called once
             mock_public_repos_url.assert_called_once()
             mock_get_json.assert_called_once_with(test_url)
+
     @parameterized.expand([
         ({"license": {"key": "my_license"}}, "my_license", True),
         ({"license": {"key": "other_license"}}, "my_license", False),
@@ -150,4 +153,3 @@ class TestIntegrationGithubOrgClient(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
-
