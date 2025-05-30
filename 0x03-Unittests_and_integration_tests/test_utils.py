@@ -62,7 +62,8 @@ class TestMemoize(unittest.TestCase):
 
     def test_memoize(self):
         """Test that when calling a_property twice, the correct result is returned
-        but a_method is only called once"""
+        but a_method is only called once
+        """
         class TestClass:
             """Test class for memoization"""
             def a_method(self):
@@ -78,7 +79,8 @@ class TestMemoize(unittest.TestCase):
         test_obj = TestClass()
 
         # Mock a_method
-        with patch.object(TestClass, 'a_method', return_value=42) as mock_method:
+        with patch.object(TestClass, 'a_method',
+                          return_value=42) as mock_method:
             # Call a_property twice
             first_call = test_obj.a_property
             second_call = test_obj.a_property
@@ -93,4 +95,3 @@ class TestMemoize(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
-
