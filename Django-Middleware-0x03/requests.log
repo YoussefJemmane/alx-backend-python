@@ -1,0 +1,6 @@
+2025-06-05 13:00:00.123456 - User: admin - Path: /api/conversations/
+2025-06-05 13:01:25.654321 - User: testuser - Path: /api/messages/
+2025-06-05 13:02:10.987654 - User: Anonymous - Path: /api/token/
+2025-06-05 13:03:45.456789 - User: moderator - Path: /api/conversations/123/messages/
+2025-06-05 13:05:22.789012 - User: admin - Path: /api/admin/users/
+
