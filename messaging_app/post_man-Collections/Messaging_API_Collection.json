@@ -1,0 +1,517 @@
+{
+  "info": {
+    "_postman_id": "baf1e8fc-25a6-4b52-9f67-6f6d4f3a62dc",
+    "name": "Messaging API Collection",
+    "description": "A collection to test the messaging app API endpoints",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Authentication",
+      "item": [
+        {
+          "name": "Obtain JWT Token",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"username\": \"testuser\",\n    \"password\": \"testpassword\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:8000/api/token/",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8000",
+              "path": [
+                "api",
+                "token",
+                ""
+              ]
+            },
+            "description": "Get JWT access and refresh tokens"
+          },
+          "response": []
+        },
+        {
+          "name": "Refresh JWT Token",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"refresh\": \"{{refresh_token}}\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:8000/api/token/refresh/",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8000",
+              "path": [
+                "api",
+                "token",
+                "refresh",
+                ""
+              ]
+            },
+            "description": "Refresh the JWT access token"
+          },
+          "response": []
+        }
+      ],
+      "description": "Authentication endpoints for JWT tokens"
+    },
+    {
+      "name": "Conversations",
+      "item": [
+        {
+          "name": "Get All Conversations",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8000/api/conversations/",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8000",
+              "path": [
+                "api",
+                "conversations",
+                ""
+              ]
+            },
+            "description": "Get all conversations for the authenticated user"
+          },
+          "response": []
+        },
+        {
+          "name": "Create Conversation",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"title\": \"Test Conversation\",\n    \"participant_ids\": [\"{{user_id}}\"]\n}"
+            },
+            "url": {
+              "raw": "http://localhost:8000/api/conversations/",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8000",
+              "path": [
+                "api",
+                "conversations",
+                ""
+              ]
+            },
+            "description": "Create a new conversation"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Conversation by ID",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8000/api/conversations/{{conversation_id}}/",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8000",
+              "path": [
+                "api",
+                "conversations",
+                "{{conversation_id}}",
+                ""
+              ]
+            },
+            "description": "Get a specific conversation by ID"
+          },
+          "response": []
+        },
+        {
+          "name": "Add Participant to Conversation",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"user_id\": \"{{user_id}}\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:8000/api/conversations/{{conversation_id}}/add_participant/",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8000",
+              "path": [
+                "api",
+                "conversations",
+                "{{conversation_id}}",
+                "add_participant",
+                ""
+              ]
+            },
+            "description": "Add a participant to a conversation"
+          },
+          "response": []
+        },
+        {
+          "name": "Filter Conversations by Created Date",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8000/api/conversations/?created_after=2023-01-01T00:00:00Z",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8000",
+              "path": [
+                "api",
+                "conversations",
+                ""
+              ],
+              "query": [
+                {
+                  "key": "created_after",
+                  "value": "2023-01-01T00:00:00Z"
+                }
+              ]
+            },
+            "description": "Filter conversations by creation date"
+          },
+          "response": []
+        }
+      ],
+      "description": "Endpoints for managing conversations"
+    },
+    {
+      "name": "Messages",
+      "item": [
+        {
+          "name": "Get Messages for Conversation",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8000/api/conversations/{{conversation_id}}/messages/",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8000",
+              "path": [
+                "api",
+                "conversations",
+                "{{conversation_id}}",
+                "messages",
+                ""
+              ]
+            },
+            "description": "Get all messages for a specific conversation"
+          },
+          "response": []
+        },
+        {
+          "name": "Send Message in Conversation",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"conversation\": \"{{conversation_id}}\",\n    \"message_body\": \"Hello, this is a test message!\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:8000/api/messages/",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8000",
+              "path": [
+                "api",
+                "messages",
+                ""
+              ]
+            },
+            "description": "Send a message in a conversation"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Unread Messages",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8000/api/messages/unread/",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8000",
+              "path": [
+                "api",
+                "messages",
+                "unread",
+                ""
+              ]
+            },
+            "description": "Get all unread messages for the current user"
+          },
+          "response": []
+        },
+        {
+          "name": "Mark Message as Read",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8000/api/messages/{{message_id}}/mark_read/",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8000",
+              "path": [
+                "api",
+                "messages",
+                "{{message_id}}",
+                "mark_read",
+                ""
+              ]
+            },
+            "description": "Mark a message as read"
+          },
+          "response": []
+        },
+        {
+          "name": "Filter Messages by Time Range",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8000/api/messages/?conversation={{conversation_id}}&sent_after=2023-01-01T00:00:00Z&sent_before=2023-12-31T23:59:59Z",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8000",
+              "path": [
+                "api",
+                "messages",
+                ""
+              ],
+              "query": [
+                {
+                  "key": "conversation",
+                  "value": "{{conversation_id}}"
+                },
+                {
+                  "key": "sent_after",
+                  "value": "2023-01-01T00:00:00Z"
+                },
+                {
+                  "key": "sent_before",
+                  "value": "2023-12-31T23:59:59Z"
+                }
+              ]
+            },
+            "description": "Filter messages by time range"
+          },
+          "response": []
+        }
+      ],
+      "description": "Endpoints for managing messages"
+    }
+  ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          ""
+        ]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "if (pm.response.code === 200 && pm.response.json().access) {",
+          "    pm.environment.set(\"access_token\", pm.response.json().access);",
+          "    pm.environment.set(\"refresh_token\", pm.response.json().refresh);",
+          "}"
+        ]
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "access_token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "refresh_token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "conversation_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "message_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "user_id",
+      "value": "",
+      "type": "string"
+    }
+  ]
+}
+

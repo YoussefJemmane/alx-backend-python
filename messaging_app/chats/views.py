@@ -4,6 +4,10 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from .models import User, Conversation, Message
 from .serializers import UserSerializer, ConversationSerializer, MessageSerializer
+from .permissions import IsParticipantOfConversation
+from django_filters.rest_framework import DjangoFilterBackend
+from .filters import MessageFilter, ConversationFilter
+from .pagination import StandardResultsSetPagination
 
 # Create your views here.
 class ConversationViewSet(viewsets.ModelViewSet):
@@ -12,8 +16,12 @@ class ConversationViewSet(viewsets.ModelViewSet):
     """
     queryset = Conversation.objects.all()
     serializer_class = ConversationSerializer
-    filter_backends = [filters.SearchFilter]
+    permission_classes = [permissions.IsAuthenticated, IsParticipantOfConversation]
+    filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
     search_fields = ['title']
+    ordering_fields = ['created_at', 'updated_at']
+    filterset_class = ConversationFilter
+    pagination_class = StandardResultsSetPagination
     
     def get_queryset(self):
         """
@@ -84,7 +92,12 @@ class MessageViewSet(viewsets.ModelViewSet):
     ViewSet for viewing and editing messages
     """
     serializer_class = MessageSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated, IsParticipantOfConversation]
+    filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
+    search_fields = ['message_body']
+    ordering_fields = ['sent_at']
+    filterset_class = MessageFilter
+    pagination_class = StandardResultsSetPagination
     
     def get_queryset(self):
         """
