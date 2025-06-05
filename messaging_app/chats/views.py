@@ -2,6 +2,7 @@ from django.shortcuts import render, get_object_or_404
 from rest_framework import viewsets, permissions, status, filters
 from rest_framework.decorators import action
 from rest_framework.response import Response
+from rest_framework.exceptions import PermissionDenied
 from .models import User, Conversation, Message
 from .serializers import UserSerializer, ConversationSerializer, MessageSerializer
 from .permissions import IsParticipantOfConversation
@@ -47,6 +48,13 @@ class ConversationViewSet(viewsets.ModelViewSet):
         conversation = self.get_object()
         user_id = request.data.get('user_id')
         
+        # Check if the user has permission to add participants
+        if request.user not in conversation.participants.all():
+            return Response(
+                {'error': 'You do not have permission to add participants to this conversation.'},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        
         if not user_id:
             return Response(
                 {'error': 'User ID is required'},
@@ -70,6 +78,13 @@ class ConversationViewSet(viewsets.ModelViewSet):
         """
         conversation = self.get_object()
         message_body = request.data.get('message_body')
+        
+        # Check if the user is a participant in the conversation
+        if request.user not in conversation.participants.all():
+            return Response(
+                {'error': 'You do not have permission to send messages in this conversation.'},
+                status=status.HTTP_403_FORBIDDEN
+            )
         
         if not message_body:
             return Response(
@@ -121,6 +136,12 @@ class MessageViewSet(viewsets.ModelViewSet):
         Return all unread messages for the current user
         """
         user = request.user
+        if not user.is_authenticated:
+            return Response(
+                {'error': 'Authentication required to view unread messages.'},
+                status=status.HTTP_403_FORBIDDEN
+            )
+            
         conversations = user.conversations.all()
         unread_messages = Message.objects.filter(
             conversation__in=conversations, 
@@ -136,6 +157,14 @@ class MessageViewSet(viewsets.ModelViewSet):
         Mark a message as read
         """
         message = self.get_object()
+        
+        # Check if the user is a participant in the conversation
+        if request.user not in message.conversation.participants.all():
+            return Response(
+                {'error': 'You do not have permission to mark this message as read.'},
+                status=status.HTTP_403_FORBIDDEN
+            )
+            
         message.is_read = True
         message.save()
         return Response({'status': 'message marked as read'})
