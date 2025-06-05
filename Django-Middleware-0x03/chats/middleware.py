@@ -114,7 +114,7 @@ class OffensiveLanguageMiddleware:
         return ip
 
 
-class RolePermissionMiddleware:
+class RolepermissionMiddleware:
     """
     Middleware that checks the user's role before allowing access to admin-only actions.
     """
