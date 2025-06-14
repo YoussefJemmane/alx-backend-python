@@ -8,8 +8,10 @@ from django.views.decorators.csrf import csrf_exempt
 from django.contrib import messages
 from .models import Message, MessageHistory, Notification
 import json
+from django.views.decorators.cache import cache_page
 
 
+@cache_page(60)
 @login_required
 def message_list(request):
     """
