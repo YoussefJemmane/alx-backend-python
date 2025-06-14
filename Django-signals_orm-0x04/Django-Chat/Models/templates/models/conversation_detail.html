@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Threaded Conversation</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .conversation-header {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        .thread-container {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        .message {
+            padding: 15px 20px;
+            border-left: 4px solid #e0e0e0;
+            margin-bottom: 1px;
+        }
+        .message.depth-0 {
+            background-color: #ffffff;
+            border-left-color: #2196F3;
+        }
+        .message.depth-1 {
+            background-color: #f8f9fa;
+            border-left-color: #4CAF50;
+            margin-left: 30px;
+        }
+        .message.depth-2 {
+            background-color: #f0f0f0;
+            border-left-color: #FF9800;
+            margin-left: 60px;
+        }
+        .message.depth-3 {
+            background-color: #e8f5e8;
+            border-left-color: #9C27B0;
+            margin-left: 90px;
+        }
+        .message.depth-4 {
+            background-color: #fff3e0;
+            border-left-color: #E91E63;
+            margin-left: 120px;
+        }
+        .message.depth-5-plus {
+            background-color: #fce4ec;
+            border-left-color: #607D8B;
+            margin-left: 150px;
+        }
+        .message-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            font-size: 0.9em;
+        }
+        .message-meta {
+            color: #666;
+            font-size: 0.8em;
+        }
+        .message-content {
+            line-height: 1.5;
+            margin: 10px 0;
+        }
+        .reply-button {
+            background-color: #2196F3;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 0.8em;
+        }
+        .reply-button:hover {
+            background-color: #1976D2;
+        }
+        .reply-form {
+            display: none;
+            margin-top: 15px;
+            padding: 15px;
+            background-color: #f9f9f9;
+            border-radius: 5px;
+        }
+        .reply-input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 3px;
+            resize: vertical;
+            font-family: inherit;
+        }
+        .stats-box {
+            background-color: #e3f2fd;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        .stats-item {
+            display: inline-block;
+            margin-right: 20px;
+            font-weight: bold;
+        }
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+            margin: 5px;
+        }
+        .btn-primary {
+            background-color: #2196F3;
+            color: white;
+        }
+        .btn-secondary {
+            background-color: #6c757d;
+            color: white;
+        }
+        .thread-depth-indicator {
+            font-size: 0.7em;
+            background-color: rgba(0,0,0,0.1);
+            padding: 2px 6px;
+            border-radius: 10px;
+            margin-left: 10px;
+        }
+        .edited-indicator {
+            color: #ff9800;
+            font-size: 0.8em;
+            font-style: italic;
+        }
+    </style>
+</head>
+<body>
+    <div class="conversation-header">
+        <h1>Threaded Conversation</h1>
+        
+        {% if thread_stats %}
+            <div class="stats-box">
+                <span class="stats-item">📬 Total Messages: {{ thread_stats.total_messages }}</span>
+                <span class="stats-item">👥 Participants: {{ thread_stats.unique_participants }}</span>
+                <span class="stats-item">📊 Max Depth: {{ thread_stats.max_depth }}</span>
+                <span class="stats-item">⏰ Last Activity: {{ thread_stats.last_activity|date:"M j, Y H:i" }}</span>
+                {% if thread_stats.edited_messages %}
+                    <span class="stats-item">✏️ Edited Messages: {{ thread_stats.edited_messages }}</span>
+                {% endif %}
+            </div>
+        {% endif %}
+        
+        <div>
+            <a href="{% url 'models:threaded_conversations_list' %}" class="btn btn-secondary">← Back to Conversations</a>
+            <a href="{% url 'models:api_thread_tree' root_message.id %}" class="btn btn-primary" target="_blank">📊 View JSON Tree</a>
+        </div>
+    </div>
+    
+    <div class="thread-container">
+        {% for message, depth in flattened_thread %}
+            <div class="message depth-{% if depth <= 4 %}{{ depth }}{% else %}5-plus{% endif %}" data-message-id="{{ message.id }}">
+                <div class="message-header">
+                    <div>
+                        <strong>{{ message.sender.username }}</strong> 
+                        → {{ message.receiver.username }}
+                        <span class="thread-depth-indicator">Depth: {{ depth }}</span>
+                        {% if message.edited %}
+                            <span class="edited-indicator">(edited {{ message.edit_count }} time{{ message.edit_count|pluralize }})</span>
+                        {% endif %}
+                    </div>
+                    <div class="message-meta">
+                        {{ message.timestamp|date:"M j, Y H:i" }}
+                        {% if message.parent_message %}
+                            <small>↳ Reply to: {{ message.parent_message.content|truncatechars:30 }}</small>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <div class="message-content">
+                    {{ message.content }}
+                </div>
+                
+                <div class="message-actions">
+                    {% if user == message.sender or user == message.receiver %}
+                        <button class="reply-button" onclick="toggleReplyForm({{ message.id }})">
+                            💬 Reply ({{ message.replies.count }} replies)
+                        </button>
+                    {% endif %}
+                </div>
+                
+                {% if user == message.sender or user == message.receiver %}
+                    <div class="reply-form" id="reply-form-{{ message.id }}">
+                        <textarea 
+                            class="reply-input" 
+                            id="reply-content-{{ message.id }}"
+                            placeholder="Write your reply..."
+                            rows="3"
+                        ></textarea>
+                        <div style="margin-top: 10px;">
+                            <button class="btn btn-primary" onclick="submitReply({{ message.id }})">
+                                Send Reply
+                            </button>
+                            <button class="btn btn-secondary" onclick="toggleReplyForm({{ message.id }})">
+                                Cancel
+                            </button>
+                        </div>
+                    </div>
+                {% endif %}
+            </div>
+        {% empty %}
+            <div class="message">
+                <p>No messages found in this conversation.</p>
+            </div>
+        {% endfor %}
+    </div>
+    
+    <script>
+        function toggleReplyForm(messageId) {
+            const form = document.getElementById(`reply-form-${messageId}`);
+            const isVisible = form.style.display !== 'none';
+            
+            // Hide all other reply forms
+            document.querySelectorAll('.reply-form').forEach(f => f.style.display = 'none');
+            
+            // Toggle current form
+            form.style.display = isVisible ? 'none' : 'block';
+            
+            if (!isVisible) {
+                document.getElementById(`reply-content-${messageId}`).focus();
+            }
+        }
+        
+        function submitReply(parentMessageId) {
+            const content = document.getElementById(`reply-content-${parentMessageId}`).value.trim();
+            
+            if (!content) {
+                alert('Please enter a reply message.');
+                return;
+            }
+            
+            fetch(`/models/reply/${parentMessageId}/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken')
+                },
+                body: JSON.stringify({
+                    content: content
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Reload the page to show the new reply
+                    location.reload();
+                } else {
+                    alert('Error: ' + data.error);
+                }
+            })
+            .catch(error => {
+                alert('An error occurred while sending the reply.');
+                console.error('Error:', error);
+            });
+        }
+        
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+        
+        // Auto-scroll to highlight threaded structure
+        document.addEventListener('DOMContentLoaded', function() {
+            const messages = document.querySelectorAll('.message');
+            messages.forEach((message, index) => {
+                message.style.animationDelay = `${index * 0.1}s`;
+            });
+        });
+    </script>
+</body>
+</html>
+

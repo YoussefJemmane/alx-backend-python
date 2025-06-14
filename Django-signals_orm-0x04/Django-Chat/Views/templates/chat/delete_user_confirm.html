@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Delete Account - Confirmation</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .warning-box {
+            background-color: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 5px;
+            padding: 20px;
+            margin: 20px 0;
+            border-left: 4px solid #f39c12;
+        }
+        .danger-box {
+            background-color: #f8d7da;
+            border: 1px solid #f5c6cb;
+            border-radius: 5px;
+            padding: 20px;
+            margin: 20px 0;
+            border-left: 4px solid #dc3545;
+        }
+        .stats-box {
+            background-color: #d1ecf1;
+            border: 1px solid #bee5eb;
+            border-radius: 5px;
+            padding: 20px;
+            margin: 20px 0;
+            border-left: 4px solid #17a2b8;
+        }
+        .confirmation-input {
+            width: 100%;
+            padding: 12px;
+            font-size: 16px;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+        .confirmation-input:focus {
+            border-color: #dc3545;
+            outline: none;
+        }
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+            margin: 5px;
+        }
+        .btn-danger {
+            background-color: #dc3545;
+            color: white;
+        }
+        .btn-danger:hover {
+            background-color: #c82333;
+        }
+        .btn-secondary {
+            background-color: #6c757d;
+            color: white;
+        }
+        .btn-secondary:hover {
+            background-color: #545b62;
+        }
+        .btn-info {
+            background-color: #17a2b8;
+            color: white;
+        }
+        .btn-info:hover {
+            background-color: #117a8b;
+        }
+        h1 {
+            color: #dc3545;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .icon {
+            font-size: 1.2em;
+            margin-right: 8px;
+        }
+        .stats-item {
+            display: flex;
+            justify-content: space-between;
+            margin: 8px 0;
+            padding: 5px 0;
+            border-bottom: 1px solid #e9ecef;
+        }
+        .stats-item:last-child {
+            border-bottom: none;
+        }
+        .form-group {
+            margin: 20px 0;
+        }
+        label {
+            font-weight: bold;
+            display: block;
+            margin-bottom: 8px;
+        }
+        .text-center {
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1><span class="icon">⚠️</span> Delete Account</h1>
+        
+        {% if messages %}
+            {% for message in messages %}
+                <div class="danger-box">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        {% endif %}
+        
+        <div class="danger-box">
+            <h3><span class="icon">🛑</span> Warning: This action cannot be undone!</h3>
+            <p>
+                You are about to permanently delete your account <strong>{{ user.username }}</strong>.
+                This will immediately and permanently remove:
+            </p>
+            <ul>
+                <li>Your user account and profile</li>
+                <li>All messages you have sent and received</li>
+                <li>All your notifications</li>
+                <li>All message edit history</li>
+                <li>Any other data associated with your account</li>
+            </ul>
+        </div>
+        
+        <div class="stats-box">
+            <h3><span class="icon">📊</span> Data to be deleted:</h3>
+            <div class="stats-item">
+                <span>Total Messages:</span>
+                <strong>{{ message_count }}</strong>
+            </div>
+            <div class="stats-item">
+                <span>Notifications:</span>
+                <strong>{{ notification_count }}</strong>
+            </div>
+            <div class="stats-item">
+                <span>Edit History Records:</span>
+                <strong>{{ edit_history_count }}</strong>
+            </div>
+        </div>
+        
+        <div class="warning-box">
+            <h3><span class="icon">💾</span> Want to backup your data first?</h3>
+            <p>Consider exporting your data before deletion:</p>
+            <div class="text-center">
+                <a href="{% url 'chat:export_user_data' %}" class="btn btn-info">
+                    <span class="icon">📥</span> Export My Data
+                </a>
+                <a href="{% url 'chat:user_deletion_stats' %}" class="btn btn-info">
+                    <span class="icon">📈</span> View Detailed Stats
+                </a>
+            </div>
+        </div>
+        
+        <form method="post" onsubmit="return confirmDeletion()">
+            {% csrf_token %}
+            
+            <div class="form-group">
+                <label for="confirmation">
+                    To confirm deletion, type: <code>delete {{ user.username }}</code>
+                </label>
+                <input 
+                    type="text" 
+                    id="confirmation" 
+                    name="confirmation" 
+                    class="confirmation-input"
+                    placeholder="Type: delete {{ user.username }}"
+                    required
+                    autocomplete="off"
+                >
+            </div>
+            
+            <div class="text-center">
+                <button type="submit" class="btn btn-danger">
+                    <span class="icon">🗑️</span> Delete My Account Permanently
+                </button>
+                <a href="/" class="btn btn-secondary">
+                    <span class="icon">↩️</span> Cancel
+                </a>
+            </div>
+        </form>
+    </div>
+    
+    <script>
+        function confirmDeletion() {
+            const input = document.getElementById('confirmation');
+            const expectedText = 'delete {{ user.username }}';
+            
+            if (input.value.trim().toLowerCase() !== expectedText.toLowerCase()) {
+                alert('Please type the exact confirmation text to proceed.');
+                return false;
+            }
+            
+            return confirm(
+                'Are you absolutely sure you want to delete your account? ' +
+                'This action cannot be undone and all your data will be permanently lost.'
+            );
+        }
+        
+        // Auto-focus the confirmation input
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('confirmation').focus();
+        });
+    </script>
+</body>
+</html>
+
