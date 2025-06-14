@@ -12,6 +12,15 @@ urlpatterns = [
     # Reply functionality
     path('reply/<int:parent_message_id>/', views.create_reply, name='create_reply'),
     
+    # Unread messages functionality (Custom ORM Manager demonstration)
+    path('inbox/', views.unread_messages_inbox, name='unread_messages_inbox'),
+    path('inbox/threads/', views.unread_messages_by_thread, name='unread_messages_by_thread'),
+    path('inbox/recent/', views.recent_unread_messages, name='recent_unread_messages'),
+    
+    # Message read status API endpoints
+    path('api/mark-read/', views.mark_messages_as_read, name='mark_messages_as_read'),
+    path('api/mark-sender-read/', views.mark_all_from_sender_as_read, name='mark_all_from_sender_as_read'),
+    
     # Analytics and statistics
     path('analytics/', views.conversation_analytics, name='conversation_analytics'),
     

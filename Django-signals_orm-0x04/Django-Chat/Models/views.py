@@ -339,6 +339,159 @@ def search_conversations(request):
 
 
 @login_required
+def unread_messages_inbox(request):
+    """
+    Display the user's inbox with only unread messages.
+    Uses the custom UnreadMessagesManager with .only() optimization.
+    """
+    # Get unread messages using the custom manager with optimized fields
+    unread_messages = Message.unread.optimized_inbox(request.user, limit=50)
+    
+    # Get unread summary statistics
+    unread_summary = Message.unread.get_unread_summary(request.user)
+    
+    # Get unread count by sender for sidebar display
+    unread_by_sender = Message.unread.unread_count_by_sender(request.user)
+    
+    # Paginate results
+    paginator = Paginator(unread_messages, 20)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+    
+    context = {
+        'unread_messages': page_obj,
+        'unread_summary': unread_summary,
+        'unread_by_sender': unread_by_sender,
+        'user': request.user
+    }
+    
+    return render(request, 'models/unread_messages_inbox.html', context)
+
+
+@login_required
+@require_http_methods(["POST"])
+def mark_messages_as_read(request):
+    """
+    Mark specific messages as read via AJAX.
+    """
+    try:
+        data = json.loads(request.body)
+        message_ids = data.get('message_ids', [])
+        
+        if not message_ids:
+            return JsonResponse({
+                'success': False,
+                'error': 'No message IDs provided.'
+            }, status=400)
+        
+        # Use the custom manager to mark messages as read
+        updated_count = Message.unread.mark_as_read(request.user, message_ids)
+        
+        return JsonResponse({
+            'success': True,
+            'marked_read': updated_count,
+            'message': f'{updated_count} messages marked as read.'
+        })
+        
+    except json.JSONDecodeError:
+        return JsonResponse({
+            'success': False,
+            'error': 'Invalid JSON data.'
+        }, status=400)
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'error': f'An error occurred: {str(e)}'
+        }, status=500)
+
+
+@login_required
+@require_http_methods(["POST"])
+def mark_all_from_sender_as_read(request):
+    """
+    Mark all unread messages from a specific sender as read.
+    """
+    try:
+        data = json.loads(request.body)
+        sender_id = data.get('sender_id')
+        
+        if not sender_id:
+            return JsonResponse({
+                'success': False,
+                'error': 'Sender ID is required.'
+            }, status=400)
+        
+        sender = get_object_or_404(User, id=sender_id)
+        
+        # Use the custom manager to mark all messages from sender as read
+        updated_count = Message.unread.batch_mark_read_by_sender(request.user, sender)
+        
+        return JsonResponse({
+            'success': True,
+            'marked_read': updated_count,
+            'sender': sender.username,
+            'message': f'{updated_count} messages from {sender.username} marked as read.'
+        })
+        
+    except json.JSONDecodeError:
+        return JsonResponse({
+            'success': False,
+            'error': 'Invalid JSON data.'
+        }, status=400)
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'error': f'An error occurred: {str(e)}'
+        }, status=500)
+
+
+@login_required
+def unread_messages_by_thread(request):
+    """
+    Display unread messages organized by conversation threads.
+    """
+    # Get unread messages organized by thread using custom manager
+    unread_threads = Message.unread.unread_threads(request.user)
+    
+    # Group messages by thread for better display
+    threads = {}
+    for message in unread_threads:
+        root_id = message.root_message.id if message.root_message else message.id
+        if root_id not in threads:
+            threads[root_id] = {
+                'root': message.root_message or message,
+                'unread_messages': []
+            }
+        threads[root_id]['unread_messages'].append(message)
+    
+    context = {
+        'threads': threads.values(),
+        'user': request.user
+    }
+    
+    return render(request, 'models/unread_messages_by_thread.html', context)
+
+
+@login_required
+def recent_unread_messages(request):
+    """
+    Display recent unread messages (last 24 hours).
+    """
+    hours = int(request.GET.get('hours', 24))
+    
+    # Get recent unread messages using custom manager
+    recent_unread = Message.unread.recent_unread(request.user, hours=hours)
+    
+    context = {
+        'recent_unread': recent_unread,
+        'hours': hours,
+        'user': request.user
+    }
+    
+    return render(request, 'models/recent_unread_messages.html', context)
+
+
+@login_required
 def demo_recursive_queries(request):
     """
     Demonstration view showing various recursive query techniques.

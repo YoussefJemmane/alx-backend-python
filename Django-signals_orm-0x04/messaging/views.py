@@ -202,3 +202,17 @@ def notifications(request):
     }
     return render(request, 'messaging/notifications.html', context)
 
+
+@login_required
+@require_http_methods(["POST"])
+def delete_user(request):
+    """
+    Allow a user to delete their own account. This will trigger the post_delete signal for cleanup.
+    """
+    user = request.user
+    user.delete()  # This triggers the post_delete signal
+    return JsonResponse({
+        'success': True,
+        'message': 'Your account has been deleted.'
+    })
+
