@@ -16,7 +16,7 @@ class Message(models.Model):
         related_name='received_messages'
     )
     content = models.TextField()
-    timestamp = models.DateTimeField(default=timezone.now)
+    timestamp = models.DateTimeField(auto_now_add=True)
     is_read = models.BooleanField(default=False)
     
     # New fields for edit tracking
@@ -31,6 +31,8 @@ class Message(models.Model):
     )
     last_edited_at = models.DateTimeField(null=True, blank=True)
     edit_count = models.IntegerField(default=0)
+    
+    parent_message = models.ForeignKey('self', on_delete=models.CASCADE, null=True, blank=True, related_name='replies')
     
     class Meta:
         ordering = ['-timestamp']
