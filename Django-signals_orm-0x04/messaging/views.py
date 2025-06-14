@@ -13,12 +13,12 @@ import json
 @login_required
 def message_list(request):
     """
-    Display all messages with edit history indicators.
+    Display all unread messages with edit history indicators.
     """
-    messages_queryset = Message.objects.select_related('sender', 'receiver').prefetch_related('history')
+    unread_messages = Message.unread.unread_for_user(request.user)
     
     context = {
-        'messages': messages_queryset,
+        'messages': unread_messages,
         'user': request.user
     }
     return render(request, 'messaging/message_list.html', context)
