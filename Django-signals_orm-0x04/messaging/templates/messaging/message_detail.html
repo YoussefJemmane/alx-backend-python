@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Message Details</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .message-detail {
+            border: 1px solid #ddd;
+            padding: 20px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        .message-detail.edited {
+            border-left: 4px solid #ff9800;
+            background-color: #fff3e0;
+        }
+        .message-header {
+            font-weight: bold;
+            font-size: 1.1em;
+            margin-bottom: 15px;
+            color: #333;
+        }
+        .message-content {
+            font-size: 1.1em;
+            line-height: 1.5;
+            margin: 15px 0;
+            padding: 15px;
+            background-color: #f9f9f9;
+            border-radius: 3px;
+        }
+        .message-meta {
+            color: #666;
+            font-size: 0.9em;
+            margin-top: 15px;
+        }
+        .edit-history {
+            margin-top: 30px;
+        }
+        .edit-history h3 {
+            color: #333;
+            border-bottom: 2px solid #ddd;
+            padding-bottom: 10px;
+        }
+        .history-item {
+            border: 1px solid #e0e0e0;
+            margin: 10px 0;
+            padding: 15px;
+            border-radius: 3px;
+            position: relative;
+        }
+        .history-item:before {
+            content: "Previous Version";
+            position: absolute;
+            top: -10px;
+            left: 10px;
+            background: white;
+            padding: 0 5px;
+            font-size: 0.8em;
+            color: #666;
+        }
+        .history-content {
+            background-color: #f5f5f5;
+            padding: 10px;
+            border-radius: 3px;
+            font-style: italic;
+            margin: 10px 0;
+        }
+        .history-meta {
+            font-size: 0.8em;
+            color: #888;
+        }
+        .btn {
+            display: inline-block;
+            padding: 8px 15px;
+            background-color: #007bff;
+            color: white;
+            text-decoration: none;
+            border-radius: 3px;
+            margin-right: 10px;
+        }
+        .btn:hover {
+            background-color: #0056b3;
+        }
+        .btn-edit {
+            background-color: #28a745;
+        }
+        .btn-edit:hover {
+            background-color: #1e7e34;
+        }
+        .btn-back {
+            background-color: #6c757d;
+        }
+        .btn-back:hover {
+            background-color: #545b62;
+        }
+        .no-history {
+            color: #666;
+            font-style: italic;
+            text-align: center;
+            padding: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Message Details</h1>
+    
+    <div class="message-detail {% if message.edited %}edited{% endif %}">
+        <div class="message-header">
+            From: {{ message.sender.username }} → To: {{ message.receiver.username }}
+        </div>
+        
+        <div class="message-content">
+            {{ message.content }}
+        </div>
+        
+        <div class="message-meta">
+            <strong>Sent:</strong> {{ message.timestamp|date:"M j, Y H:i" }}<br>
+            
+            {% if message.edited %}
+                <strong>Status:</strong> <span style="color: #ff9800;">Edited {{ message.edit_count }} time{{ message.edit_count|pluralize }}</span><br>
+                {% if message.edited_at %}
+                    <strong>Last edited:</strong> {{ message.edited_at|date:"M j, Y H:i" }}<br>
+                {% endif %}
+                {% if message.edited_by %}
+                    <strong>Edited by:</strong> {{ message.edited_by.username }}<br>
+                {% endif %}
+            {% else %}
+                <strong>Status:</strong> <span style="color: #28a745;">Original (never edited)</span><br>
+            {% endif %}
+            
+            <strong>Read:</strong> {% if message.is_read %}Yes{% else %}No{% endif %}
+        </div>
+    </div>
+    
+    <div class="edit-history">
+        <h3>Edit History</h3>
+        
+        {% if edit_history %}
+            {% for history_item in edit_history %}
+                <div class="history-item">
+                    <div class="history-content">
+                        "{{ history_item.old_content }}"
+                    </div>
+                    <div class="history-meta">
+                        <strong>Edited:</strong> {{ history_item.edited_at|date:"M j, Y H:i" }} by {{ history_item.edited_by.username }}
+                        {% if history_item.edit_reason %}
+                            <br><strong>Reason:</strong> {{ history_item.edit_reason }}
+                        {% endif %}
+                    </div>
+                </div>
+            {% endfor %}
+        {% else %}
+            <div class="no-history">
+                This message has never been edited.
+            </div>
+        {% endif %}
+    </div>
+    
+    <div style="margin-top: 30px;">
+        {% if user == message.sender %}
+            <button class="btn btn-edit" onclick="editMessage()">Edit Message</button>
+        {% endif %}
+        <a href="{% url 'messaging:message_list' %}" class="btn btn-back">Back to Messages</a>
+    </div>
+    
+    <script>
+        function editMessage() {
+            const newContent = prompt('Edit your message:', '{{ message.content|escapejs }}');
+            const editReason = prompt('Reason for edit (optional):');
+            
+            if (newContent && newContent.trim() !== '') {
+                fetch('{% url "messaging:edit_message" message.id %}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': getCookie('csrftoken')
+                    },
+                    body: JSON.stringify({
+                        content: newContent.trim(),
+                        edit_reason: editReason || ''
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        location.reload();
+                    } else {
+                        alert('Error: ' + data.error);
+                    }
+                })
+                .catch(error => {
+                    alert('An error occurred while editing the message.');
+                });
+            }
+        }
+        
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+    </script>
+</body>
+</html>
+
