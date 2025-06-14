@@ -119,6 +119,12 @@ def cleanup_user_related_data(sender, instance, **kwargs):
         # Log the deletion event
         logger.info(f"Post-delete signal triggered for user: {username} (ID: {user_id})")
         
+        # Explicitly delete related data
+        Message.objects.filter(sender=instance).delete()
+        Message.objects.filter(receiver=instance).delete()
+        Notification.objects.filter(user=instance).delete()
+        MessageHistory.objects.filter(edited_by=instance).delete()
+        
         # Note: Due to the CASCADE relationships defined in the models,
         # the following data should already be automatically deleted:
         # - All sent messages (Message.sender -> CASCADE)
