@@ -1,0 +1,4 @@
+kali-tweaks==2023.3.2
+packaging==25.0
+python-apt==2.9.8
+wheel==0.46.1
