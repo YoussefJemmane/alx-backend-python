@@ -15,5 +15,8 @@ RUN pip install --upgrade pip && pip install -r requirements.txt
 # Copy project
 COPY . /app/
 
+# Expose port 8000
+EXPOSE 8000
+
 # Default command
 CMD ["python3", "manage.py", "runserver", "0.0.0.0:8000"]
