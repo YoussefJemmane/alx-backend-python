@@ -1,0 +1,16 @@
+#!/bin/bash
+
+# Apply the updated blue_deployment.yaml file to trigger a rolling update
+kubectl apply -f blue_deployment.yaml
+
+# Monitor the update progress
+kubectl rollout status deployment/blue-deployment
+
+# Test for any downtime during the update
+while true; do
+    curl -s http://<your-service-url> || echo "Service is down"
+    sleep 1
+done
+
+# Verify the Rolling Update is Complete
+kubectl get pods

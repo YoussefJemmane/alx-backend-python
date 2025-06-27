@@ -1,0 +1,8 @@
+#!/bin/bash
+
+# Deploy the blue and green versions of the Django app
+kubectl apply -f blue_deployment.yaml
+kubectl apply -f green_deployment.yaml
+
+# Check for errors in the new version's logs
+kubectl logs -l app=djangomessagingapp --tail=50 --follow
