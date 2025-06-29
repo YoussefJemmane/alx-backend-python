@@ -1,0 +1,117 @@
+name: CI Pipeline
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: rootpassword
+          MYSQL_DATABASE: messaging_app_test
+          MYSQL_USER: testuser
+          MYSQL_PASSWORD: testpassword
+        ports:
+          - 3306:3306
+        options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=3
+
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+    
+    - name: Cache pip dependencies
+      uses: actions/cache@v3
+      with:
+        path: ~/.cache/pip
+        key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+        restore-keys: |
+          ${{ runner.os }}-pip-
+    
+    - name: Install dependencies
+      working-directory: ./messaging_app
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+    
+    - name: Wait for MySQL
+      run: |
+        while ! mysqladmin ping -h"127.0.0.1" -P3306 -uroot -prootpassword --silent; do
+          echo "Waiting for MySQL to be ready..."
+          sleep 2
+        done
+        echo "MySQL is ready!"
+    
+    - name: Run Django Tests
+      working-directory: ./messaging_app
+      env:
+        MYSQL_DATABASE: messaging_app_test
+        MYSQL_USER: testuser
+        MYSQL_PASSWORD: testpassword
+        MYSQL_HOST: 127.0.0.1
+        MYSQL_PORT: 3306
+        DJANGO_SETTINGS_MODULE: messaging_app.settings
+      run: |
+        python manage.py migrate
+        python manage.py collectstatic --noinput
+        pytest --junitxml=test-results.xml --cov=. --cov-report=xml --cov-report=html
+    
+    - name: Code Quality Check with flake8
+      working-directory: ./messaging_app
+      run: |
+        # Stop the build if there are Python syntax errors or undefined names
+        flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+        # Exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
+        flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+    
+    - name: Generate Coverage Report
+      working-directory: ./messaging_app
+      run: |
+        coverage report
+        coverage html
+    
+    - name: Upload Coverage Reports
+      uses: actions/upload-artifact@v3
+      with:
+        name: coverage-report
+        path: ./messaging_app/htmlcov/
+    
+    - name: Upload Test Results
+      uses: actions/upload-artifact@v3
+      if: always()
+      with:
+        name: test-results
+        path: ./messaging_app/test-results.xml
+    
+    - name: Comment Coverage
+      if: github.event_name == 'pull_request'
+      uses: actions/github-script@v6
+      with:
+        script: |
+          const fs = require('fs');
+          const path = './messaging_app/coverage.xml';
+          
+          if (fs.existsSync(path)) {
+            const coverage = fs.readFileSync(path, 'utf8');
+            const match = coverage.match(/line-rate="([^"]+)"/);
+            if (match) {
+              const rate = (parseFloat(match[1]) * 100).toFixed(2);
+              github.rest.issues.createComment({
+                issue_number: context.issue.number,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                body: `## Coverage Report\n\nCode coverage: ${rate}%`
+              });
+            }
+          }
+
