@@ -1,26 +1,49 @@
 pipeline {
     agent any
+
+    // Manual trigger only; no automatic triggers
+    triggers { 
+        // No triggers means manual build only
+    }
+
+    environment {
+        // Use the GitHub credentials ID you created in Jenkins
+        GIT_CREDENTIALS = 'f79f5641-9da1-42e0-92c9-2972ed6fb29c'
+    }
+
     stages {
         stage('Checkout') {
             steps {
-                checkout([$class: 'GitSCM', 
-                          branches: [[name: 'main']], 
-                          userRemoteConfigs: [[url: 'https://github.com/YoussefJemmane/alx-backend-python.git', credentialsId: 'f79f5641-9da1-42e0-92c9-2972ed6fb29c']]])
+                // Checkout the messaging_app directory from GitHub using credentials
+                git branch: 'main', 
+                    credentialsId: env.GIT_CREDENTIALS, 
+                    url: 'https://github.com/YoussefJemmane/alx-backend-python.git'
             }
         }
+
         stage('Install Dependencies') {
             steps {
-                sh 'apt-get update && apt-get install -y python3 python3-pip'
-                sh 'pip3 install pytest'
+                // Install dependencies from requirements.txt inside messaging_app directory
+                sh '''
+                    cd messaging_app
+                    python3 -m pip install --upgrade pip
+                    pip install -r requirements.txt
+                '''
             }
         }
+
         stage('Run Tests') {
             steps {
-                sh 'pytest --junitxml=report.xml'
+                // Run pytest and generate junit xml report for Jenkins
+                sh '''
+                    cd messaging_app
+                    pytest --junitxml=results.xml
+                '''
             }
             post {
                 always {
-                    junit 'report.xml'
+                    // Publish test results to Jenkins
+                    junit 'messaging_app/results.xml'
                 }
             }
         }
