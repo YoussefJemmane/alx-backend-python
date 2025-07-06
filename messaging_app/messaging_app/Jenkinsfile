@@ -5,28 +5,24 @@ pipeline {
             args '-v /var/jenkins_home/.cache:/root/.cache' // optional cache volume
         }
     }
-
     environment {
         GIT_CREDENTIALS = 'f79f5641-9da1-42e0-92c9-2972ed6fb29c'
     }
-
     stages {
         stage('Checkout') {
             steps {
                 git branch: 'main', credentialsId: env.GIT_CREDENTIALS, url: 'https://github.com/YoussefJemmane/alx-backend-python.git'
             }
         }
-
         stage('Install Dependencies') {
             steps {
                 sh '''
                     cd messaging_app
                     python -m pip install --upgrade pip
-                    pip install -r requirements.txt
+                    pip3 install -r messaging_app/requirements.txt
                 '''
             }
         }
-
         stage('Run Tests') {
             steps {
                 sh '''
