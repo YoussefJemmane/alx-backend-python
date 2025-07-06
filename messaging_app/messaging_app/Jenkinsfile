@@ -1,10 +1,7 @@
 pipeline {
     agent any
 
-    // Manual trigger only; no automatic triggers
-    triggers { 
-        // No triggers means manual build only
-    }
+    
 
     environment {
         // Use the GitHub credentials ID you created in Jenkins
