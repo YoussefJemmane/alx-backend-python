@@ -1,29 +1,27 @@
 pipeline {
-    agent any
-
-    
+    agent {
+        docker {
+            image 'python:3.11'
+            args '-v /var/jenkins_home/.cache:/root/.cache' // optional cache volume
+        }
+    }
 
     environment {
-        // Use the GitHub credentials ID you created in Jenkins
         GIT_CREDENTIALS = 'f79f5641-9da1-42e0-92c9-2972ed6fb29c'
     }
 
     stages {
         stage('Checkout') {
             steps {
-                // Checkout the messaging_app directory from GitHub using credentials
-                git branch: 'main', 
-                    credentialsId: env.GIT_CREDENTIALS, 
-                    url: 'https://github.com/YoussefJemmane/alx-backend-python.git'
+                git branch: 'main', credentialsId: env.GIT_CREDENTIALS, url: 'https://github.com/YoussefJemmane/alx-backend-python.git'
             }
         }
 
         stage('Install Dependencies') {
             steps {
-                // Install dependencies from requirements.txt inside messaging_app directory
                 sh '''
                     cd messaging_app
-                    python3 -m pip install --upgrade pip
+                    python -m pip install --upgrade pip
                     pip install -r requirements.txt
                 '''
             }
@@ -31,7 +29,6 @@ pipeline {
 
         stage('Run Tests') {
             steps {
-                // Run pytest and generate junit xml report for Jenkins
                 sh '''
                     cd messaging_app
                     pytest --junitxml=results.xml
@@ -39,7 +36,6 @@ pipeline {
             }
             post {
                 always {
-                    // Publish test results to Jenkins
                     junit 'messaging_app/results.xml'
                 }
             }
